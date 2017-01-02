@@ -25,12 +25,10 @@ Use this alexa skill to add items to a wunderlist.
 ## Examples
 Example user interactions:
 
-##### Default model:
-    User: "Alexa, ask wunderlist to add eggs"
+    User:  "Alexa, ask wunderlist to add eggs"
     Alexa: "Eggs have been added to groceries"
 
-##### Groceries model:
-    User: "Alexa, ask wunderlist to add milk to groceries"
-    Alexa: "Eggs have been added to groceries"
+    User:  "Alexa, ask wunderlist to add milk to groceries"
+    Alexa: "Milk have been added to groceries"
 
-Groceries is the default list if none is specified
+*Groceries is the default list if none is specified*
