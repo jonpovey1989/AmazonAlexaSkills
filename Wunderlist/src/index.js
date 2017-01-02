@@ -63,7 +63,6 @@ exports.handler = function (event, context) {
 function onSessionStarted(sessionStartedRequest, session) {
     console.log("onSessionStarted requestId=" + sessionStartedRequest.requestId
         + ", sessionId=" + session.sessionId);
-
     // add any session init logic here
 }
 
@@ -72,8 +71,7 @@ function onSessionStarted(sessionStartedRequest, session) {
  */
 function onLaunch(launchRequest, session, callback) {
     console.log("onLaunch requestId=" + launchRequest.requestId
-        + ", sessionId=" + session.sessionId);
-		
+        + ", sessionId=" + session.sessionId);		
 	getHelpResponse(session, callback);
 }
 
@@ -84,7 +82,6 @@ function onLaunch(launchRequest, session, callback) {
 function onSessionEnded(sessionEndedRequest, session) {
     console.log("onSessionEnded requestId=" + sessionEndedRequest.requestId
         + ", sessionId=" + session.sessionId);
-
     // Add any cleanup logic here
 }
 
