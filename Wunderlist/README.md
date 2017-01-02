@@ -1,29 +1,32 @@
-###Amazon Alexa Skills###
+## Wunderlist ##
 
-This README would normally document whatever steps are necessary to get your application up and running.
+Use this alexa skill to add items to a list.
 
-### What is this repository for? ###
+**Installing dependencies**
+This alexa skill has been created using node.js and modules must be installed before uplaoding to the Amazon Lamba Management Console.
+Navigate to the the wunderlist folder in the command line and run "npm install".
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+**Upload to Lambda Management Console**
+- Create a zip folder of the folder which src excluding package.json
+- Naviagte to https://console.aws.amazon.com/lambda/
+- Create a new function and upload the zip file to the code tab
+- Set the trigger as an Amazon Alexa SKill
+- Set xClientId and xAccessToken envrionment variables
+- Set role as "lamba_basic_execution"
+- Set timeout as 5 secs
 
-### How do I get set up? ###
+**Create Alexa Skill**
+- Naviagte to https://developer.amazon.com/edw/home.html#/skills/list and create a new skill
+- Set language as English (U.K)
+- Set name of skill as wunderlist. This will be used to activate alexa
+- Setup the interaction model using files from the speechAssets folder
+- Set configuration as NorthAmerica and set applicationId. This is stored in the Lambda Management Console in top right corner as a string prefixed with arn:
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+## Samples ##
+User: "Alexa, ask wunderlist to add eggs"
+Alexa: "Eggs have been added to groceries"
 
-### Contribution guidelines ###
+User: "Alexa, ask wunderlist to add milk to groceries"
+Alexa: "Milk has been added to groceries"
 
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+Groceries is the default list if none is specified
