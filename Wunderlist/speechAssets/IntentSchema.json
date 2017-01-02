@@ -1,0 +1,26 @@
+{
+  "intents": [
+	{
+	  "intent": "ItemIntent", 
+	  "slots": [
+		{
+		  "name": "Item",
+		  "type": "LIST_OF_ITEMS"
+		}, 
+		{
+		  "name": "List",
+		  "type": "LIST_OF_LISTS"
+		}
+	  ]
+	},	    
+	{
+	  "intent": "AMAZON.HelpIntent"
+	},	    
+	{
+	  "intent": "AMAZON.StopIntent"
+	},
+	{
+	  "intent": "AMAZON.CancelIntent"
+	}
+  ]
+}
