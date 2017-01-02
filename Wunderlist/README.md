@@ -1,4 +1,4 @@
-## Wunderlist ##
+# Wunderlist
 
 Use this alexa skill to add items to a list.
 
@@ -22,11 +22,15 @@ Navigate to the the wunderlist folder in the command line and run "npm install".
 - Setup the interaction model using files from the speechAssets folder
 - Set configuration as NorthAmerica and set applicationId. This is stored in the Lambda Management Console in top right corner as a string prefixed with arn:
 
-## Samples ##
-User: "Alexa, ask wunderlist to add eggs"
-Alexa: "Eggs have been added to groceries"
+## Examples
+Example user interactions:
 
-User: "Alexa, ask wunderlist to add milk to groceries"
-Alexa: "Milk has been added to groceries"
+### Default model:
+    User: "Alexa, ask wunderlist to add eggs"
+    Alexa: "Eggs have been added to groceries"
+
+### Groveries model:
+    User: "Alexa, ask wunderlist to add milk to groceries"
+    Alexa: "Eggs have been added to groceries"
 
 Groceries is the default list if none is specified
