@@ -3,8 +3,8 @@
 Use this alexa skill to add items to a list.
 
 **Installing dependencies**
-This alexa skill has been created using node.js and modules must be installed before uplaoding to the Amazon Lamba Management Console.
-Navigate to the the wunderlist folder in the command line and run "npm install".
+- This alexa skill has been created using node.js and modules must be installed before uplaoding to the Amazon Lamba Management Console.
+- Navigate to the the wunderlist folder in the command line and run "npm install".
 
 **Upload to Lambda Management Console**
 - Create a zip folder of the folder which src excluding package.json
