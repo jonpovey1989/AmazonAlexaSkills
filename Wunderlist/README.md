@@ -1,6 +1,6 @@
 # Wunderlist
 
-Use this alexa skill to add items to a list.
+Use this alexa skill to add items to a wunderlist.
 
 ####Installing dependencies
 - This alexa skill has been created using node.js and modules must be installed before uplaoding to the Amazon Lamba Management Console.
@@ -11,7 +11,7 @@ Use this alexa skill to add items to a list.
 - Naviagte to https://console.aws.amazon.com/lambda/
 - Create a new function and upload the zip file to the code tab
 - Set the trigger as an Amazon Alexa SKill
-- Set xClientId and xAccessToken envrionment variables
+- Set xClientId and xAccessToken envrionment variables assoicated with your wunderlist account
 - Set role as "lamba_basic_execution"
 - Set timeout as 5 secs
 
