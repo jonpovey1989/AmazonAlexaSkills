@@ -14,6 +14,7 @@
  - Allow user to specify list alternate list name  
  - Get list id from api, Remove hardcoded list ids
  - Add function to create a new list if it doesnt exist
+ - Implement http://caolan.github.io/async/docs.html#waterfall to prevent functions executing asynchronously. Or consider implenting chaining callbacks
  */
 
 'use strict';
