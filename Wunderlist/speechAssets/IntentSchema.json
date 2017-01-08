@@ -12,7 +12,16 @@
 		  "type": "LIST_OF_LISTS"
 		}
 	  ]
-	},	    
+	},
+	{
+	  "intent": "ListIntent",
+	  "slots": [
+		{
+		  "name": "List",
+		  "type": "LIST_OF_LISTS"
+		}
+	  ]
+	},	  
 	{
 	  "intent": "AMAZON.HelpIntent"
 	},	    

@@ -10,7 +10,6 @@
  TODO
  - Uncomment application id code
  - Fix plurals for adding items to basket
- - Get alexa to read all items from a list
  - Allow user to specify list alternate list name  
  - Get list id from api, Remove hardcoded list ids
  - Add function to create a new list if it doesnt exist
@@ -95,6 +94,8 @@ function onIntent(intentRequest, session, context) {
 		
 	if ("ItemIntent" === intentName) {
         handleAddItemRequest(intent, session, context);
+    } else if ("ListIntent" === intentName) {
+        handlListItemRequest(intent, session, context);
     } else if ("AMAZON.NoIntent" === intentName) {
         handleNoIntentRequest(intent, session, context);
     } else if ("AMAZON.HelpIntent" === intentName) {
@@ -182,6 +183,73 @@ function handleAddItemRequest(intent, session, context) {
 												
 				} else {					
 					speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+				}
+				
+				context.succeed(buildResponse(session.attributes, speechResponse));
+			}
+		);		
+	
+	} catch (e) {
+        context.fail("Exception: " + e);
+    }		
+}
+
+function handlListItemRequest(intent, session, context) {
+	
+	try {
+		
+		var list = intent.slots.List.value;
+		
+		if (list === undefined) {
+			list = "groceries";
+		}
+		
+		var listId = '165353142'
+		
+		var request = require('request');
+
+		request.get(
+			'https://a.wunderlist.com/api/v1/tasks?list_id=' + listId,
+			{ 
+				headers: {
+					'x-access-token': process.env.xAccessToken,
+					'x-client-id': process.env.xClientId,
+					'content-type': 'application/json'
+				}
+			},
+			function (error, response, body) {
+				
+				var cardTitle = "";
+				var speechOutput = "";
+				var speechResponse = null;
+				
+				if (!error && response.statusCode == 200) {								
+					
+					var items = JSON.parse(body);
+					var listOfItems = "";
+					
+					for(var i = 0; i < items.length; i++) {
+						var itemTitle = items[i].title;
+						var prefix = ", ";
+						
+						if (i == 0) {
+							prefix = "";
+						}
+						
+						if (i == items.length - 1) {
+							prefix = " and "							
+						} 					
+												
+						listOfItems = listOfItems + prefix + itemTitle;
+					}
+														
+					speechOutput = "In " + list + " you have " + listOfItems;	
+					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
+													
+												
+				} else {					
+					speechOutput = "Sorry, there was a problem. Failed to list items for " + list + "!";	
 					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
 				}
 				
