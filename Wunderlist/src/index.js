@@ -9,10 +9,11 @@
  
  TODO
  - Uncomment application id code
- - Fix plurals for adding items to basket
  - Allow user to specify list alternate list name  
  - Get list id from api, Remove hardcoded list ids
  - Add function to create a new list if it doesnt exist
+ - Introduce call backs or async library to avoid large functions and break the methods down. 
+	- Currently node js executes diff functions in diff threads.
  */
 
 'use strict';
@@ -168,13 +169,17 @@ function handleAddItemRequest(intent, session, context) {
 				
 				if (!error && response.statusCode == 201) {		
 				
-					 var newItemId = body.id;
+					var newItemId = body.id;
 					
-					//console.log(newItemId)					
+					var lastChar = item.replace(/\s/g, '').slice(-1);
+					var plural = " has";
+					if (lastChar == "s") {
+						plural = " have";
+					}
 					
 					if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
-						cardTitle = item + " have been added to " + list + ".";
-						speechOutput = item + " have been added to " + list + "!";
+						cardTitle = item + plural + " been added to " + list + ".";
+						speechOutput = item + plural + " been added to " + list + "!";
 						speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
 					} else {
 						speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
