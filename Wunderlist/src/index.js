@@ -13,9 +13,13 @@
  - Allow user to specify alternate list name  
  - Get list id from api, Remove hardcoded list ids
  - Add function to create a new list if it doesnt exist 
+ - make appId a variable
  */
 
 'use strict';
+
+var apiAccessToken = "";
+var apiClientId = "";
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -23,6 +27,18 @@ exports.handler = function (event, context) {
 		
     try {					
         console.log("event.session.application.applicationId=" + event.session.application.applicationId);
+		
+		if (process.env.xAccessToken == undefined) {
+			apiAccessToken = event.session.attributes.xAccessToken;
+		} else {
+			apiAccessToken = process.env.xAccessToken;
+		}
+		
+		if (process.env.xClientId == undefined) {
+			apiClientId = event.session.attributes.xClientId
+		} else {
+			apiClientId = process.env.xClientId;
+		}
 
         /**
          * Uncomment this if statement and populate with your skill's application ID to
@@ -155,8 +171,8 @@ function handleAddItemRequest(intent, session, context) {
 					starred: false
 				}, 
 				headers: {
-					'x-access-token': process.env.xAccessToken,
-					'x-client-id': process.env.xClientId,
+					'x-access-token': apiAccessToken,
+					'x-client-id': apiClientId,
 					'content-type': 'application/json'
 				}
 			},
@@ -213,12 +229,15 @@ function handlListItemRequest(intent, session, context) {
 		
 		var request = require('request');
 
+		console.log("token: " + apiAccessToken);
+		console.log("id: " + apiClientId);
+		
 		request.get(
 			'https://a.wunderlist.com/api/v1/tasks?list_id=' + listId,
 			{ 
 				headers: {
-					'x-access-token': process.env.xAccessToken,
-					'x-client-id': process.env.xClientId,
+					'x-access-token': apiAccessToken,
+					'x-client-id': apiClientId,
 					'content-type': 'application/json'
 				}
 			},

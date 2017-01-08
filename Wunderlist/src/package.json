@@ -1,21 +1,23 @@
 {
-  "name": "wunderlist_skill",
+  "name": "wunderlist",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.14.0",
+    "alexa-sdk": "^1.0.6",
+    "aws-lambda-mock-context": "^3.0.1",
+    "chai": "^3.5.0",
     "request": "^2.79.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.0.1",
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "request": "^2.79.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://bitbucket.org/jonpovey1989/amazon-alexa.git"
-  },
-  "author": "Jon Povey",
-  "license": "ISC",
-  "homepage": "https://bitbucket.org/jonpovey1989/amazon-alexa#readme"
+  "author": "",
+  "license": "ISC"
 }
