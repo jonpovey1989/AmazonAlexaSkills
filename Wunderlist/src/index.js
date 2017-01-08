@@ -13,7 +13,7 @@
  - Allow user to specify alternate list name  
  - Get list id from api, Remove hardcoded list ids
  - Add function to create a new list if it doesnt exist 
- - make appId a variable
+ - make appId a variable to make it more secure
  */
 
 'use strict';
