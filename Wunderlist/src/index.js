@@ -215,6 +215,15 @@ function handleAddItemRequest(intent, session, context) {
     }		
 }
 
+function GetId(list) {
+	
+	if (list === "groceries") {
+		return "165353142"
+	}
+	
+	return ""
+}
+
 function handlListItemRequest(intent, session, context) {
 	
 	try {
@@ -223,66 +232,85 @@ function handlListItemRequest(intent, session, context) {
 		
 		if (list === undefined) {
 			list = "groceries";
-		}
+		}		
 		
-		var listId = '165353142'
+		var listId = GetId(list);
 		
-		var request = require('request');
-
-		console.log("token: " + apiAccessToken);
-		console.log("id: " + apiClientId);
-		
-		request.get(
-			'https://a.wunderlist.com/api/v1/tasks?list_id=' + listId,
-			{ 
-				headers: {
-					'x-access-token': apiAccessToken,
-					'x-client-id': apiClientId,
-					'content-type': 'application/json'
-				}
-			},
-			function (error, response, body) {
-				
-				var cardTitle = "";
-				var speechOutput = "";
-				var speechResponse = null;
-				
-				if (!error && response.statusCode == 200) {								
+		var listDetails = {
+							"listTitle" : list,
+							"listId" : listId
+						  }	
+							
+		var async = require('async');		
 					
-					var items = JSON.parse(body);
-					var listOfItems = "";
-					
-					for(var i = 0; i < items.length; i++) {
-						var itemTitle = items[i].title;
-						var prefix = ", ";
-						
-						if (i == 0) {
-							prefix = "";
-						}
-						
-						if (i == items.length - 1) {
-							prefix = " and "							
-						} 					
-												
-						listOfItems = listOfItems + prefix + itemTitle;
-					}
-														
-					speechOutput = "In " + list + " you have " + listOfItems;	
-					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
-													
-												
-				} else {					
-					speechOutput = "Sorry, there was a problem. Failed to list items for " + list + "!";	
-					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
-				}
-				
-				context.succeed(buildResponse(session.attributes, speechResponse));
-			}
-		);		
-	
+		async.waterfall([
+			async.apply(myFirstFunction, listId, list),
+			mySecondFunction
+		], function (err, speechResponse) {
+			
+			context.succeed(buildResponse(session.attributes, speechResponse));
+			
+		});	
+		
 	} catch (e) {
         context.fail("Exception: " + e);
     }		
+}
+
+function myFirstFunction(listId, list, callback) {		
+					
+	var request = require('request');
+	
+	request.get(
+		'https://a.wunderlist.com/api/v1/tasks?list_id=' + listId,
+		{ 
+			headers: {
+				'x-access-token': apiAccessToken,
+				'x-client-id': apiClientId,
+				'content-type': 'application/json'
+			}
+		},
+		function (error, response, body) {
+			callback(null, error, response, body, list);
+		});					
+}
+
+function mySecondFunction(error, response, body, list, callback) {
+								
+	var cardTitle = "";
+	var speechOutput = "";
+	var speechResponse = null;
+				
+	if (!error && response.statusCode == 200) {								
+			
+		var items = JSON.parse(body);
+		var listOfItems = "";
+		
+		for(var i = 0; i < items.length; i++) {
+			var itemTitle = items[i].title;
+			var prefix = ", ";
+			
+			if (i == 0) {
+				prefix = "";
+			}
+			
+			if (i == items.length - 1) {
+				prefix = " and "							
+			} 					
+									
+			listOfItems = listOfItems + prefix + itemTitle;
+		}
+											
+		speechOutput = "In " + list + " you have " + listOfItems;	
+		speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
+										
+									
+	} else {					
+		speechOutput = "Sorry, there was a problem. Failed to list items for " + list + "!";	
+		speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+	}
+		
+	callback(null, speechResponse);
 }
 
 // ------- Helper functions to build responses -------
