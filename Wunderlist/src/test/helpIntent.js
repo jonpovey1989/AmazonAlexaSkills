@@ -7,7 +7,7 @@ const ctx = context();
 describe("Testing a session with the AMAZON.HelpIntent.", function() {
     var speechResponse = null
     var speechError = null
- 
+  
     before(function(done){
         index.handler({
             "session": {

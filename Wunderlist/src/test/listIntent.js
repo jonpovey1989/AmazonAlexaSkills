@@ -8,6 +8,8 @@ describe("Testing a session with the ListIntent.", function() {
     var speechResponse = null
     var speechError = null
  
+	var config = require('./config.json');
+	 
     before(function(done){
         index.handler({
             "session": {
@@ -16,8 +18,8 @@ describe("Testing a session with the ListIntent.", function() {
                     "applicationId": "amzn1.ask.skill.8ce4061e-150b-4b92-b1dd-202c85dcf24d"
             },
             "attributes": {
-				"xAccessToken" : "4135227b08078201a09464e7cf61cd82257b927a8e288719399849f823ac",
-				"xClientId" : "85f44e63483abd3f8819"
+				"xAccessToken" : config.xAccessToken,
+				"xClientId" : config.xClientId
 			},
             "user": {
                 "userId": null
