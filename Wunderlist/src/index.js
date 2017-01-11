@@ -18,6 +18,9 @@
 
 'use strict';
 
+var request = require('request');
+var async = require('async');
+
 var apiAccessToken = "";
 var apiClientId = "";
 
@@ -159,7 +162,6 @@ function handleAddItemRequest(intent, session, context) {
 			list = "groceries";
 		}	
 								
-		var request = require('request');
 
 		request.post(
 			'https://a.wunderlist.com/api/v1/tasks',
@@ -224,32 +226,34 @@ function GetId(list) {
 	return ""
 }
 
+function GetListDetails (intent) {
+	
+	var list = intent.slots.List.value;
+		
+	if (list === undefined) {
+		list = "groceries";
+	}		
+	
+	var listId = GetId(list);
+	
+	var listDetails = {
+						"listTitle" : list,
+						"listId" : listId
+					  }	
+	
+	return listDetails;	
+}
+
 function handlListItemRequest(intent, session, context) {
 	
-	try {
-		
-		var list = intent.slots.List.value;
-		
-		if (list === undefined) {
-			list = "groceries";
-		}		
-		
-		var listId = GetId(list);
-		
-		var listDetails = {
-							"listTitle" : list,
-							"listId" : listId
-						  }	
-							
-		var async = require('async');		
-					
+	try {				
+		var listDetails = GetListDetails(intent);							
+									
 		async.waterfall([
-			async.apply(myFirstFunction, listId, list),
-			mySecondFunction
-		], function (err, speechResponse) {
-			
-			context.succeed(buildResponse(session.attributes, speechResponse));
-			
+			async.apply(GetListItems, listDetails),
+			ProcessListResponse
+		], function (err, speechResponse) {			
+			context.succeed(buildResponse(session.attributes, speechResponse));			
 		});	
 		
 	} catch (e) {
@@ -257,12 +261,11 @@ function handlListItemRequest(intent, session, context) {
     }		
 }
 
-function myFirstFunction(listId, list, callback) {		
-					
-	var request = require('request');
-	
+
+function GetListItems(listDetails, callback) {	
+						
 	request.get(
-		'https://a.wunderlist.com/api/v1/tasks?list_id=' + listId,
+		'https://a.wunderlist.com/api/v1/tasks?list_id=' + listDetails.listId,
 		{ 
 			headers: {
 				'x-access-token': apiAccessToken,
@@ -271,46 +274,60 @@ function myFirstFunction(listId, list, callback) {
 			}
 		},
 		function (error, response, body) {
-			callback(null, error, response, body, list);
+			callback(null, error, response, body, listDetails);
 		});					
 }
 
-function mySecondFunction(error, response, body, list, callback) {
+function ProcessListResponse(error, response, body, listDetails, callback) {
 								
-	var cardTitle = "";
-	var speechOutput = "";
 	var speechResponse = null;
 				
 	if (!error && response.statusCode == 200) {								
-			
-		var items = JSON.parse(body);
-		var listOfItems = "";
-		
-		for(var i = 0; i < items.length; i++) {
-			var itemTitle = items[i].title;
-			var prefix = ", ";
-			
-			if (i == 0) {
-				prefix = "";
-			}
-			
-			if (i == items.length - 1) {
-				prefix = " and "							
-			} 					
-									
-			listOfItems = listOfItems + prefix + itemTitle;
-		}
-											
-		speechOutput = "In " + list + " you have " + listOfItems;	
-		speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
-										
-									
-	} else {					
-		speechOutput = "Sorry, there was a problem. Failed to list items for " + list + "!";	
-		speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+		speechResponse = GetListOfItemsSpeechResponse(body, listDetails.listTitle);																	
+	} else {						
+		speechResponse = GetListOfItemsErrorSpeechResponse(listDetails.listTitle);				
 	}
 		
 	callback(null, speechResponse);
+}
+
+function GetListOfItemsSpeechResponse(body, list) {
+	
+	var items = JSON.parse(body);
+	var listOfItems = ListOfItemsToString(items);		
+										
+	var speechOutput = "In " + list + " you have " + listOfItems;
+	
+	return buildSpeechletResponseWithoutCard(speechOutput, "", true)	
+	
+}
+
+function ListOfItemsToString(items) {
+	
+	var listOfItems = "";
+	
+	for(var i = 0; i < items.length; i++) {
+		var itemTitle = items[i].title;
+		var prefix = ", ";
+		
+		if (i == 0) {
+			prefix = "";
+		}
+		
+		if (i == items.length - 1) {
+			prefix = " and "							
+		} 					
+								
+		listOfItems = listOfItems + prefix + itemTitle;			
+	}
+	
+	return listOfItems;	
+}
+
+
+function GetListOfItemsErrorSpeechResponse(list) {
+	var speechOutput = "Sorry, there was a problem. Failed to list items for " + list + "!";	
+	return buildSpeechletResponseWithoutCard(speechOutput, "", true)
 }
 
 // ------- Helper functions to build responses -------
