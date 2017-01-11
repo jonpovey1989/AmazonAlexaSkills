@@ -161,14 +161,36 @@ function handleAddItemRequest(intent, session, context) {
 		if (list === undefined) {
 			list = "groceries";
 		}	
-								
-
-		request.post(
+		
+		var listId = GetListId(list);
+		
+		var listDetails = GetListDetails(intent)
+		
+		async.waterfall([
+			async.apply(AddItemToList, listDetails),
+			ProccessAddItemResponse
+		], function (err, speechResponse) {	
+			
+			if (err == null) {
+				console.log('sss')
+				context.succeed(buildResponse(session.attributes, speechResponse));	
+			} else {
+				console.log('dfdf')
+				
+				context.succeed(buildResponse(session.attributes, GetListOfItemsErrorSpeechResponse()));	
+			}						
+		});	
+					
+		function AddItemToList(listDetails, callback) {
+		
+			console.log(listDetails);
+		
+			request.post(
 			'https://a.wunderlist.com/api/v1/tasks',
 			{ 
 				json: { 
-					list_id: 165353142,
-					title: item,
+					list_id: 285747132,
+					title: listDetails.item,
 					completed: false,
 					starred: false
 				}, 
@@ -179,69 +201,49 @@ function handleAddItemRequest(intent, session, context) {
 				}
 			},
 			function (error, response, body) {
+				callback(null, error, response, body, listDetails);
+			});		
+		}
+		
+		function ProccessAddItemResponse(error, response, body, listDetails, callback) {
+						
+			console.log(body);			
+						
+			var cardTitle = "";
+			var speechOutput = "";
+			var speechResponse = null;
+			
+			if (!error && response.statusCode == 201) {		
+			
+				var newItemId = body.id;
 				
-				var cardTitle = "";
-				var speechOutput = "";
-				var speechResponse = null;
-				
-				if (!error && response.statusCode == 201) {		
-				
-					var newItemId = body.id;
-					
-					var lastChar = item.replace(/\s/g, '').slice(-1);
-					var plural = " has";
-					if (lastChar == "s") {
-						plural = " have";
-					}
-					
-					if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
-						cardTitle = item + plural + " been added to " + list + ".";
-						speechOutput = item + plural + " been added to " + list + "!";
-						speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
-					} else {
-						speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
-						speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
-					}									
-												
-				} else {					
-					speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
-					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+				var lastChar = item.replace(/\s/g, '').slice(-1);
+				var plural = " has";
+				if (lastChar == "s") {
+					plural = " have";
 				}
 				
-				context.succeed(buildResponse(session.attributes, speechResponse));
+				if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
+					cardTitle = item + plural + " been added to " + list + ".";
+					speechOutput = item + plural + " been added to " + list + "!";
+					speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
+				} else {
+					speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
+				}									
+											
+			} else {					
+				speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+				speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
 			}
-		);		
+			
+			context.succeed(buildResponse(session.attributes, speechResponse));
+		
+		}		
 	
 	} catch (e) {
         context.fail("Exception: " + e);
     }		
-}
-
-function GetId(list) {
-	
-	if (list === "groceries") {
-		return "165353142"
-	}
-	
-	return ""
-}
-
-function GetListDetails (intent) {
-	
-	var list = intent.slots.List.value;
-		
-	if (list === undefined) {
-		list = "groceries";
-	}		
-	
-	var listId = GetId(list);
-	
-	var listDetails = {
-						"listTitle" : list,
-						"listId" : listId
-					  }	
-	
-	return listDetails;	
 }
 
 function handlListItemRequest(intent, session, context) {
@@ -252,8 +254,12 @@ function handlListItemRequest(intent, session, context) {
 		async.waterfall([
 			async.apply(GetListItems, listDetails),
 			ProcessListResponse
-		], function (err, speechResponse) {			
-			context.succeed(buildResponse(session.attributes, speechResponse));			
+		], function (err, speechResponse) {	
+			if (err == null) {
+				context.succeed(buildResponse(session.attributes, speechResponse));	
+			} else {
+				context.succeed(buildResponse(session.attributes, GetListOfItemsErrorSpeechResponse()));	
+			}						
 		});	
 		
 	} catch (e) {
@@ -261,6 +267,43 @@ function handlListItemRequest(intent, session, context) {
     }		
 }
 
+function GetListId(list) {
+	
+	if (list === "groceries") {
+		return 165353142;
+	}
+	
+	if (list === "Test List") {
+		return 285747132;
+	}
+	
+	return 0;
+}
+
+function GetListDetails (intent) {
+	
+	var item = "";
+	
+	var list = intent.slots.List.value;
+		
+	if (list === undefined) {
+		list = "groceries";
+	}	
+	
+	if (intent.slots.Item != undefined) {
+		item = intent.slots.Item.value;
+	}
+	
+	var listId = GetListId(list);
+	
+	var listDetails = {
+						"listTitle" : list,
+						"listId" : listId,
+						"item" : item
+					  }	
+	
+	return listDetails;	
+}
 
 function GetListItems(listDetails, callback) {	
 						

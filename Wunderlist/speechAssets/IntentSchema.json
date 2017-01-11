@@ -23,6 +23,9 @@
 	  ]
 	},	  
 	{
+	  "intent": "TestRequest"
+	},
+	{
 	  "intent": "AMAZON.HelpIntent"
 	},	    
 	{
