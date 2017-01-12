@@ -162,6 +162,8 @@ function handleAddItemRequest(intent, session, context) {
 			list = "groceries";
 		}	
 		
+		var listDetails = GetListDetails(intent);
+		
 		async.waterfall([
 			async.apply(AddItemToList, item, list),
 			ProcessAddItemResponse
@@ -174,14 +176,14 @@ function handleAddItemRequest(intent, session, context) {
     }		
 }
 
-function AddItemToList(item, list, callback) {
+function AddItemToList(listDetails, callback) {
 		
 	request.post(
 	'https://a.wunderlist.com/api/v1/tasks',
 	{ 
 		json: { 
-			list_id: 285747132,
-			title: item,
+			list_id: listDetails.listId,
+			title: listDetails.item,
 			completed: false,
 			starred: false
 		}, 
@@ -196,11 +198,14 @@ function AddItemToList(item, list, callback) {
 	});
 }
 
-function ProcessAddItemResponse(error, response, body, item, list, callback) {
+function ProcessAddItemResponse(error, response, body, listDetails, callback) {
 	
 	var cardTitle = "";
 	var speechOutput = "";
 	var speechResponse = null;
+	
+	var item = listDetails.item;
+	var list = listDetails.listTitle;
 	
 	if (!error && response.statusCode == 201) {		
 	
@@ -244,17 +249,23 @@ function GetId(list) {
 
 function GetListDetails (intent) {
 	
+	var item = ""
 	var list = intent.slots.List.value;
 		
 	if (list === undefined) {
 		list = "groceries";
-	}		
+	}	
+
+	if (intent.slots.List != undefined) {
+		item = intent.slots.List.value;
+	}
 	
 	var listId = GetId(list);
 	
 	var listDetails = {
 						"listTitle" : list,
-						"listId" : listId
+						"listId" : listId,
+						"item" : item
 					  }	
 	
 	return listDetails;	
