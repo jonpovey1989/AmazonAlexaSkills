@@ -161,13 +161,21 @@ function handleAddItemRequest(intent, session, context) {
 		if (list === undefined) {
 			list = "groceries";
 		}	
-								
+		
+		async.waterfall([
+			async.apply(AddItemToList, item, list),
+			ProcessAddItemResponse
+		], function (err, speechResponse) {			
+			context.succeed(buildResponse(session.attributes, speechResponse));			
+		});			
 
-		request.post(
+		function AddItemToList(item, list, callback) {
+		
+			request.post(
 			'https://a.wunderlist.com/api/v1/tasks',
 			{ 
 				json: { 
-					list_id: 165353142,
+					list_id: 285747132,
 					title: item,
 					completed: false,
 					starred: false
@@ -179,38 +187,92 @@ function handleAddItemRequest(intent, session, context) {
 				}
 			},
 			function (error, response, body) {
+				callback(null, error, response, body, item, list);
+			});
+		}
+		
+		function ProcessAddItemResponse(error, response, body, item, list, callback) {
+			
+			var cardTitle = "";
+			var speechOutput = "";
+			var speechResponse = null;
+			
+			if (!error && response.statusCode == 201) {		
+			
+				var newItemId = body.id;
 				
-				var cardTitle = "";
-				var speechOutput = "";
-				var speechResponse = null;
-				
-				if (!error && response.statusCode == 201) {		
-				
-					var newItemId = body.id;
-					
-					var lastChar = item.replace(/\s/g, '').slice(-1);
-					var plural = " has";
-					if (lastChar == "s") {
-						plural = " have";
-					}
-					
-					if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
-						cardTitle = item + plural + " been added to " + list + ".";
-						speechOutput = item + plural + " been added to " + list + "!";
-						speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
-					} else {
-						speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
-						speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
-					}									
-												
-				} else {					
-					speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
-					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+				var lastChar = item.replace(/\s/g, '').slice(-1);
+				var plural = " has";
+				if (lastChar == "s") {
+					plural = " have";
 				}
 				
-				context.succeed(buildResponse(session.attributes, speechResponse));
+				if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
+					cardTitle = item + plural + " been added to " + list + ".";
+					speechOutput = item + plural + " been added to " + list + "!";
+					speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
+				} else {
+					speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+					speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
+				}									
+											
+			} else {					
+				speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+				speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
 			}
-		);		
+			
+			context.succeed(buildResponse(session.attributes, speechResponse));
+		
+		}
+		
+		// request.post(
+			// 'https://a.wunderlist.com/api/v1/tasks',
+			// { 
+				// json: { 
+					// list_id: 285747132,
+					// title: item,
+					// completed: false,
+					// starred: false
+				// }, 
+				// headers: {
+					// 'x-access-token': apiAccessToken,
+					// 'x-client-id': apiClientId,
+					// 'content-type': 'application/json'
+				// }
+			// },
+			// function (error, response, body) {
+				
+				// var cardTitle = "";
+				// var speechOutput = "";
+				// var speechResponse = null;
+				
+				// if (!error && response.statusCode == 201) {		
+				
+					// var newItemId = body.id;
+					
+					// var lastChar = item.replace(/\s/g, '').slice(-1);
+					// var plural = " has";
+					// if (lastChar == "s") {
+						// plural = " have";
+					// }
+					
+					// if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
+						// cardTitle = item + plural + " been added to " + list + ".";
+						// speechOutput = item + plural + " been added to " + list + "!";
+						// speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
+					// } else {
+						// speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+						// speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
+					// }									
+												
+				// } else {					
+					// speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
+					// speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+				// }
+				
+				// context.succeed(buildResponse(session.attributes, speechResponse));
+			// }
+		// );		
 	
 	} catch (e) {
         context.fail("Exception: " + e);
@@ -220,10 +282,14 @@ function handleAddItemRequest(intent, session, context) {
 function GetId(list) {
 	
 	if (list === "groceries") {
-		return "165353142"
+		return 165353142;
 	}
 	
-	return ""
+	if (list === "Test List") {
+		return 285747132;
+	}
+	
+	return 0;
 }
 
 function GetListDetails (intent) {
