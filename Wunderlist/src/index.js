@@ -114,7 +114,7 @@ function onIntent(intentRequest, session, context) {
 	if ("ItemIntent" === intentName) {
         handleAddItemRequest(intent, session, context);
     } else if ("ListIntent" === intentName) {
-        handlListItemRequest(intent, session, context);
+        handleListItemRequest(intent, session, context);
     } else if ("AMAZON.NoIntent" === intentName) {
         handleNoIntentRequest(intent, session, context);
     } else if ("AMAZON.HelpIntent" === intentName) {
@@ -169,65 +169,143 @@ function handleAddItemRequest(intent, session, context) {
     }		
 }
 
+function handleListItemRequest(intent, session, context) {
+	
+	try {				
+		var listDetails = GetListDetails(intent);							
+									
+		async.waterfall([
+			async.apply(GetListItems, listDetails),
+			ProcessListResponse
+		], function (err, speechResponse) {			
+			context.succeed(buildResponse(session.attributes, speechResponse));			
+		});	
+		
+	} catch (e) {
+        context.fail("Exception: " + e);
+    }		
+}
+
+
+
 function AddItemToList(listDetails, callback) {
-		
-	console.log(listDetails)	
-		
+				
 	request.post(
-	'https://a.wunderlist.com/api/v1/tasks',
-	{ 
-		json: { 
-			list_id: listDetails.listId,
-			title: listDetails.item,
-			completed: false,
-			starred: false
-		}, 
-		headers: {
-			'x-access-token': apiAccessToken,
-			'x-client-id': apiClientId,
-			'content-type': 'application/json'
-		}
-	},
-	function (error, response, body) {
-		callback(null, error, response, body, listDetails);
-	});
+		'https://a.wunderlist.com/api/v1/tasks',
+		{ 
+			json: BuildAddItemJson(listDetails.listId, listDetails.item), 
+			headers: BuildRequestHeaders()
+		},
+		function (error, response, body) {
+			callback(null, error, response, body, listDetails);
+		});
 }
 
 function ProcessAddItemResponse(error, response, body, listDetails, callback) {
-	
-	console.log(listDetails)	
-	
-	var cardTitle = "";
-	var speechOutput = "";
+		
 	var speechResponse = null;
-	var item = listDetails.item;
-	var list = listDetails.listTitle;
 	
 	if (!error && response.statusCode == 201) {		
-	
-		var newItemId = body.id;
-		
-		var lastChar = item.replace(/\s/g, '').slice(-1);
-		var plural = " has";
-		if (lastChar == "s") {
-			plural = " have";
-		}
-		
-		if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
-			cardTitle = item + plural + " been added to " + list + ".";
-			speechOutput = item + plural + " been added to " + list + "!";
-			speechResponse = buildSpeechletResponse(cardTitle, speechOutput, "", true)
-		} else {
-			speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
-			speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)
-		}									
-									
-	} else {					
-		speechOutput = "Sorry, there was a problem. Failed to add " + item + " to " + list + "!";	
-		speechResponse = buildSpeechletResponseWithoutCard(speechOutput, "", true)					
+		speechResponse = GetAddItemSpeechResponse(body, listDetails);																	
+	} else {						
+		speechResponse = GetAddItemErrorSpeechResponse(listDetails);
 	}
 	
 	callback(null, speechResponse);
+}
+
+
+function GetListItems(listDetails, callback) {	
+						
+	request.get(
+		'https://a.wunderlist.com/api/v1/tasks?list_id=' + listDetails.listId,
+		{ 
+			headers: BuildRequestHeaders()
+		},
+		function (error, response, body) {
+			callback(null, error, response, body, listDetails);
+		});					
+}
+
+function ProcessListResponse(error, response, body, listDetails, callback) {
+								
+	var speechResponse = null;
+				
+	if (!error && response.statusCode == 200) {								
+		speechResponse = GetListOfItemsSpeechResponse(body, listDetails.listTitle);																	
+	} else {						
+		speechResponse = GetListOfItemsErrorSpeechResponse(listDetails.listTitle);				
+	}
+		
+	callback(null, speechResponse);
+}
+
+function GetAddItemSpeechResponse(body, listDetails) {
+	
+	var speechResponse = null;
+	var newItemId = body.id;
+
+	if (newItemId !== null && newItemId !== undefined && newItemId > 0) {
+		speechResponse = GetAddItemSuccessSpeechResponse(listDetails);
+	} else {
+		speechResponse = GetAddItemErrorSpeechResponse(listDetails);
+	}
+	
+	return speechResponse;
+	
+}
+
+function GetAddItemSuccessSpeechResponse(listDetails) {	
+	var plural = GetPlural(listDetails.item);		
+	var cardTitle = listDetails.item + plural + " been added to " + listDetails.listTitle + ".";
+	var speechOutput = listDetails.item + plural + " been added to " + listDetails.listTitle + "!";
+	return buildSpeechletResponse(cardTitle, speechOutput, "", true)
+}
+
+function GetPlural(item) {
+	var lastChar = item.replace(/\s/g, '').slice(-1);
+	var plural = " has";
+	if (lastChar == "s") {
+		plural = " have";
+	}
+	
+	return plural;
+}
+
+function GetAddItemErrorSpeechResponse(listDetails) {
+	var speechOutput = "Sorry, there was a problem. Failed to add " + listDetails.item + " to " + listDetails.listTitle + "!";	
+	return buildSpeechletResponseWithoutCard(speechOutput, "", true)
+}
+
+function GetListOfItemsSpeechResponse(body, list) {
+	
+	var items = JSON.parse(body);
+	var listOfItems = ListOfItemsToString(items);		
+										
+	var speechOutput = "In " + list + " you have " + listOfItems;
+	
+	return buildSpeechletResponseWithoutCard(speechOutput, "", true)	
+	
+}
+
+function BuildRequestHeaders() {
+
+	return {
+				'x-access-token': apiAccessToken,
+				'x-client-id': apiClientId,
+				'content-type': 'application/json'
+			};
+
+}
+
+function BuildAddItemJson(listId, item) {
+	
+	return { 
+				list_id: listId,
+				title: item,
+				completed: false,
+				starred: false
+			}
 }
 
 function GetId(list) {
@@ -265,64 +343,6 @@ function GetListDetails (intent) {
 					  }	
 	
 	return listDetails;	
-}
-
-function handlListItemRequest(intent, session, context) {
-	
-	try {				
-		var listDetails = GetListDetails(intent);							
-									
-		async.waterfall([
-			async.apply(GetListItems, listDetails),
-			ProcessListResponse
-		], function (err, speechResponse) {			
-			context.succeed(buildResponse(session.attributes, speechResponse));			
-		});	
-		
-	} catch (e) {
-        context.fail("Exception: " + e);
-    }		
-}
-
-
-function GetListItems(listDetails, callback) {	
-						
-	request.get(
-		'https://a.wunderlist.com/api/v1/tasks?list_id=' + listDetails.listId,
-		{ 
-			headers: {
-				'x-access-token': apiAccessToken,
-				'x-client-id': apiClientId,
-				'content-type': 'application/json'
-			}
-		},
-		function (error, response, body) {
-			callback(null, error, response, body, listDetails);
-		});					
-}
-
-function ProcessListResponse(error, response, body, listDetails, callback) {
-								
-	var speechResponse = null;
-				
-	if (!error && response.statusCode == 200) {								
-		speechResponse = GetListOfItemsSpeechResponse(body, listDetails.listTitle);																	
-	} else {						
-		speechResponse = GetListOfItemsErrorSpeechResponse(listDetails.listTitle);				
-	}
-		
-	callback(null, speechResponse);
-}
-
-function GetListOfItemsSpeechResponse(body, list) {
-	
-	var items = JSON.parse(body);
-	var listOfItems = ListOfItemsToString(items);		
-										
-	var speechOutput = "In " + list + " you have " + listOfItems;
-	
-	return buildSpeechletResponseWithoutCard(speechOutput, "", true)	
-	
 }
 
 function ListOfItemsToString(items) {
