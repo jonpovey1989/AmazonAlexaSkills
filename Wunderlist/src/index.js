@@ -155,17 +155,19 @@ function handleAddItemRequest(intent, session, context) {
 	
 	try {
 		
-		var item = intent.slots.Item.value;
-		var list = intent.slots.List.value;
+		// var item = intent.slots.Item.value;
+		// var list = intent.slots.List.value;
 			
-		if (list === undefined) {
-			list = "groceries";
-		}	
+		// if (list === undefined) {
+			// list = "groceries";
+		// }	
 		
-		var listDetails = GetListDetails(intent);
+		// //var listDetails = GetListDetails(intent);
+		// var listId = 285747132;		
 		
 		async.waterfall([
-			async.apply(AddItemToList, item, list),
+			async.apply(GetAddItemDetails, intent),
+			AddItemToList,
 			ProcessAddItemResponse
 		], function (err, speechResponse) {			
 			context.succeed(buildResponse(session.attributes, speechResponse));			
@@ -176,7 +178,16 @@ function handleAddItemRequest(intent, session, context) {
     }		
 }
 
+function GetAddItemDetails(intent, callback) {
+	
+	var listDetails = GetListDetails(intent);
+	
+	callback(null, listDetails);
+}
+
 function AddItemToList(listDetails, callback) {
+		
+	console.log(listDetails)	
 		
 	request.post(
 	'https://a.wunderlist.com/api/v1/tasks',
@@ -194,16 +205,17 @@ function AddItemToList(listDetails, callback) {
 		}
 	},
 	function (error, response, body) {
-		callback(null, error, response, body, item, list);
+		callback(null, error, response, body, listDetails);
 	});
 }
 
 function ProcessAddItemResponse(error, response, body, listDetails, callback) {
 	
+	console.log(listDetails)	
+	
 	var cardTitle = "";
 	var speechOutput = "";
 	var speechResponse = null;
-	
 	var item = listDetails.item;
 	var list = listDetails.listTitle;
 	
@@ -240,7 +252,7 @@ function GetId(list) {
 		return 165353142;
 	}
 	
-	if (list === "Test List") {
+	if (list === "test list") {
 		return 285747132;
 	}
 	
@@ -256,8 +268,8 @@ function GetListDetails (intent) {
 		list = "groceries";
 	}	
 
-	if (intent.slots.List != undefined) {
-		item = intent.slots.List.value;
+	if (intent.slots.Item != undefined) {
+		item = intent.slots.Item.value;
 	}
 	
 	var listId = GetId(list);

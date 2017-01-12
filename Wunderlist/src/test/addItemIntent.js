@@ -35,7 +35,7 @@ describe("Testing a session with the ListIntent.", function() {
                     "slots": {
                         "List": {
                             "name": "List",
-                            "value": "Test List"
+                            "value": "test list"
                         },
 						"Item": {
                             "name": "Item",
