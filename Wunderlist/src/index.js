@@ -155,19 +155,10 @@ function handleAddItemRequest(intent, session, context) {
 	
 	try {
 		
-		// var item = intent.slots.Item.value;
-		// var list = intent.slots.List.value;
-			
-		// if (list === undefined) {
-			// list = "groceries";
-		// }	
-		
-		// //var listDetails = GetListDetails(intent);
-		// var listId = 285747132;		
-		
+		var listDetails = GetListDetails(intent);		
+				
 		async.waterfall([
-			async.apply(GetAddItemDetails, intent),
-			AddItemToList,
+			async.apply(AddItemToList, listDetails),
 			ProcessAddItemResponse
 		], function (err, speechResponse) {			
 			context.succeed(buildResponse(session.attributes, speechResponse));			
@@ -176,13 +167,6 @@ function handleAddItemRequest(intent, session, context) {
 	} catch (e) {
         context.fail("Exception: " + e);
     }		
-}
-
-function GetAddItemDetails(intent, callback) {
-	
-	var listDetails = GetListDetails(intent);
-	
-	callback(null, listDetails);
 }
 
 function AddItemToList(listDetails, callback) {
